@@ -1,46 +1,45 @@
-import re
 from pathlib import Path
 
-from PIL import Image
+from core.processor import process_folder
+from telegram.service import send_to_telegram
+from utils.logger import setup_logger
 
-from color_detector import get_color_tags
-from pinter import printer
+logger = setup_logger()
 
 images_dir = Path("images")
 
-# همه پوشه‌های دسته‌بندی (Minimal, Nature, ...)
+
+def safe_int(name: str) -> int:
+    try:
+        return int(name)
+    except ValueError:
+        return float("inf")
+
+
+logger.info("🚀 Starting wallpaper upload process...")
+
 for category in sorted(images_dir.iterdir()):
     if not category.is_dir():
         continue
 
-    # همه پوشه‌های شماره (1, 2, 3, ...)
-    for folder in sorted(category.iterdir(), key=lambda x: int(x.name)):
+    logger.info(f"📁 Category: {category.name}")
+
+    for folder in sorted(category.iterdir(), key=lambda x: safe_int(x.name)):
         if not folder.is_dir():
             continue
 
-        wallpaper = next(folder.glob("LockScreenZone-WP-*.*"), None)
+        logger.info(f"➡️ Processing folder: {folder.name}")
 
-        if wallpaper is None:
-            print(f"❌ Wallpaper not found in {folder}")
+        data = process_folder(folder)
+
+        if not data:
+            logger.warning(f"⚠️ Skipped folder: {folder.name}")
             continue
 
-        match = re.search(r"WP-(\d+)", wallpaper.stem)
+        try:
+            send_to_telegram(data)
+            logger.info(f"✅ Sent: {folder.name}")
+        except Exception as e:
+            logger.error(f"❌ Failed folder {folder.name}: {e}")
 
-        if not match:
-            print(f"❌ Invalid filename: {wallpaper.name}")
-            continue
-
-        wallpaper_id = int(match.group(1))
-
-        with Image.open(wallpaper) as img:
-            width, height = img.size
-
-        color_tags = get_color_tags(wallpaper)
-
-        tags = [category.name.capitalize()]
-        tags.extend(color_tags)
-
-        hashtags = " ".join(f"#{tag}" for tag in tags)
-
-        print("=" * 60)
-        printer(wallpaper_id, width, height, hashtags)
+logger.info("🎉 Finished all uploads")

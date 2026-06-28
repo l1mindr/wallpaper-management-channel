@@ -1,4 +1,5 @@
 import colorsys
+
 import colorgram
 
 COLOR_FAMILY = {

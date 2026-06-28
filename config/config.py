@@ -1,0 +1,2 @@
+BOT_TOKEN = "8277807941:AAFriS4lq_H7yrUF66DhuKwKvg9Rq4Q8vgM"
+CHANNEL_ID = "@LockScreenZone"
