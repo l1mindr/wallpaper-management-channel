@@ -1,2 +1,7 @@
-BOT_TOKEN = "8277807941:AAFriS4lq_H7yrUF66DhuKwKvg9Rq4Q8vgM"
-CHANNEL_ID = "@LockScreenZone"
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHANNEL_ID = os.getenv("CHANNEL_ID")
