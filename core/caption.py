@@ -7,7 +7,7 @@ def build_caption(wallpaper_id: int, width: int, height: int, hashtags: str):
     return "\n".join(
         [
             f"📱 والپیپر {to_persian_digits(str(wallpaper_id))}",
-            f"رزولوشن: [{width}]×[{height}]",
+            f"رزولوشن: [{height}]×[{width}]",
             f"مناسب برای آیفون {apple}",
             "دانلود فایل 👇",
             "",
