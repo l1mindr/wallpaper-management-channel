@@ -1,36 +1,46 @@
-from pathlib import Path
-from PIL import Image
 import re
+from pathlib import Path
+
+from PIL import Image
+
+from color_detector import get_color_tags
+from pinter import printer
 
 images_dir = Path("images")
 
-for folder in sorted(images_dir.iterdir(), key=lambda x: int(x.name)):
-    if not folder.is_dir():
+# همه پوشه‌های دسته‌بندی (Minimal, Nature, ...)
+for category in sorted(images_dir.iterdir()):
+    if not category.is_dir():
         continue
 
-    wallpaper = next(folder.glob("LockScreenZone-WP-*.*"), None)
+    # همه پوشه‌های شماره (1, 2, 3, ...)
+    for folder in sorted(category.iterdir(), key=lambda x: int(x.name)):
+        if not folder.is_dir():
+            continue
 
-    if wallpaper is None:
-        print(f"❌ Wallpaper not found in {folder.name}")
-        continue
+        wallpaper = next(folder.glob("LockScreenZone-WP-*.*"), None)
 
-    match = re.search(r"WP-(\d+)", wallpaper.stem)
+        if wallpaper is None:
+            print(f"❌ Wallpaper not found in {folder}")
+            continue
 
-    if not match:
-        print(f"❌ Invalid filename: {wallpaper.name}")
-        continue
+        match = re.search(r"WP-(\d+)", wallpaper.stem)
 
-    wallpaper_id = int(match.group(1))
+        if not match:
+            print(f"❌ Invalid filename: {wallpaper.name}")
+            continue
 
-    with Image.open(wallpaper) as img:
-        width, height = img.size
+        wallpaper_id = int(match.group(1))
 
-    print("=" * 60)
-    print(f"""📱 والپیپر {wallpaper_id}
-    رزولوشن: ‎[{width}]×[{height}]
-    مناسب برای آیفون 🍎
-    دانلود فایل 👇
+        with Image.open(wallpaper) as img:
+            width, height = img.size
 
-    #LockScreenZone #WP{wallpaper_id:03d} #Vespa #Green
-    @LockScreenZone
-    """)
+        color_tags = get_color_tags(wallpaper)
+
+        tags = [category.name.capitalize()]
+        tags.extend(color_tags)
+
+        hashtags = " ".join(f"#{tag}" for tag in tags)
+
+        print("=" * 60)
+        printer(wallpaper_id, width, height, hashtags)
