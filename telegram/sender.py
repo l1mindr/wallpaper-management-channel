@@ -1,9 +1,11 @@
 import logging
+import tempfile
 from pathlib import Path
 
 import requests
 
 from config.config import BOT_TOKEN, CHANNEL_ID
+from services.watermark import add_watermark
 
 logger = logging.getLogger("wallpaper_bot")
 
@@ -14,16 +16,23 @@ def send_preview(preview_path: Path, caption: str) -> int:
     logger.info(f"📤 Sending preview → {preview_path}")
 
     try:
-        with open(preview_path, "rb") as photo:
-            res = requests.post(
-                url,
-                data={
-                    "chat_id": CHANNEL_ID,
-                    "caption": caption,
-                },
-                files={"photo": photo},
-                timeout=30,
-            )
+        # اضافه کردن واترمارک
+        watermarked = add_watermark(preview_path)
+
+        # ذخیره موقت برای ارسال
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp:
+            watermarked.save(tmp.name, quality=95)
+
+            with open(tmp.name, "rb") as photo:
+                res = requests.post(
+                    url,
+                    data={
+                        "chat_id": CHANNEL_ID,
+                        "caption": caption,
+                    },
+                    files={"photo": photo},
+                    timeout=30,
+                )
 
         result = res.json()
 
