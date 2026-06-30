@@ -1,45 +1,29 @@
-from pathlib import Path
+from rich.console import Console
 
-from core.processor import process_folder
-from telegram.service import send_to_telegram
-from utils.logger import setup_logger
+from menu import show_menu
+from services.upload import upload_wallpapers
 
-logger = setup_logger()
-
-images_dir = Path("images")
+console = Console()
 
 
-def safe_int(name: str) -> int:
-    try:
-        return int(name)
-    except ValueError:
-        return float("inf")
+def main():
+    while True:
+        choice = show_menu()
+
+        match choice:
+            case "1":
+                console.print("\n[cyan]Starting wallpaper upload...[/cyan]\n")
+                upload_wallpapers()
+                input("\nPress Enter to continue...")
+
+            case "2":
+                console.print("[yellow] Search and Edit Post (Coming Soon)[/yellow]")
+                input("\nPress Enter to continue...")
+
+            case "0":
+                console.print("[bold red]Goodbye![/bold red]")
+                break
 
 
-logger.info("🚀 Starting wallpaper upload process...")
-
-for category in sorted(images_dir.iterdir()):
-    if not category.is_dir():
-        continue
-
-    logger.info(f"📁 Category: {category.name}")
-
-    for folder in sorted(category.iterdir(), key=lambda x: safe_int(x.name)):
-        if not folder.is_dir():
-            continue
-
-        logger.info(f"➡️ Processing folder: {folder.name}")
-
-        data = process_folder(folder)
-
-        if not data:
-            logger.warning(f"⚠️ Skipped folder: {folder.name}")
-            continue
-
-        try:
-            send_to_telegram(data)
-            logger.info(f"✅ Sent: {folder.name}")
-        except Exception as e:
-            logger.error(f"❌ Failed folder {folder.name}: {e}")
-
-logger.info("🎉 Finished all uploads")
+if __name__ == "__main__":
+    main()
